@@ -5,15 +5,20 @@ LV_IMG_DECLARE(jerry);
 namespace GHUI {
     lv_obj_t* posLabel;
     lv_obj_t* selectedAutonLabel;
+
     lv_obj_t* homeScreen;
     lv_obj_t* tabview;
+
     lv_obj_t* startButton;
+
     lv_obj_t* redAUTONS;
     lv_obj_t* blueAUTONS;
     lv_obj_t* otherAUTONS;
     lv_obj_t* config;
     lv_obj_t* console;
+
     lv_obj_t* bar;
+
     int selected_auton = -1;
     int numRed = 0;
     int numBlue = 0;
@@ -105,6 +110,7 @@ namespace GHUI {
     }
 
     void initialize_auton_selector() {
+        load_selected_auton();
         lv_style_init(&optionsButtonStyle);
         lv_style_set_bg_color(&optionsButtonStyle, lv_color_make(255, 255, 255));
 
@@ -143,6 +149,15 @@ namespace GHUI {
                 case 4:
                     lv_obj_set_pos(btn, 0, 60);
                     break;
+                case 5:
+                    lv_obj_set_pos(btn, 110, 60);
+                    break;
+                case 6:
+                    lv_obj_set_pos(btn, 220, 60);
+                    break;
+                case 7:
+                    lv_obj_set_pos(btn, 330, 60);
+                    break;
             }
             numRed++;
             lv_obj_add_style(btn, &redAutonButtonStyle, 0);
@@ -153,16 +168,25 @@ namespace GHUI {
                     lv_obj_set_pos(btn, 0, 0);
                     break;
                 case 1:
-                    lv_obj_set_pos(btn, 100, 0);
+                    lv_obj_set_pos(btn, 110, 0);
                     break;
                 case 2:
-                    lv_obj_set_pos(btn, 200, 0);
+                    lv_obj_set_pos(btn, 220, 0);
                     break;
                 case 3:
-                    lv_obj_set_pos(btn, 300, 0);
+                    lv_obj_set_pos(btn, 330, 0);
                     break;
                 case 4:
-                    lv_obj_set_pos(btn, 0, 50);
+                    lv_obj_set_pos(btn, 0, 60);
+                    break;
+                case 5:
+                    lv_obj_set_pos(btn, 110, 60);
+                    break;
+                case 6:
+                    lv_obj_set_pos(btn, 220, 60);
+                    break;
+                case 7:
+                    lv_obj_set_pos(btn, 330, 60);
                     break;
             }
             numBlue++;
@@ -179,8 +203,29 @@ namespace GHUI {
 
     void change_selected_auton(int index) {
         selected_auton = index;
+
+        FILE* file = fopen("/usd/auton.txt", "w");
+        if (file) {
+            fputs(std::to_string(selected_auton).c_str(), file);
+            fclose(file);
+        }
     }
 
+    void load_selected_auton() {
+        FILE* file = fopen("/usd/auton.txt", "r");
+        if (file) {
+            char buffer[10];
+            if (fgets(buffer, sizeof(buffer), file)) {
+                selected_auton = std::stoi(buffer);
+            } else {
+                selected_auton = -1; // Default if reading fails
+            }
+            fclose(file);
+        } else {
+            selected_auton = -1; // Default if file does not exist
+        }
+    }
+    
     void run_selected_auton() {
         if(selected_auton == -1) {
             return;
