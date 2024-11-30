@@ -1,9 +1,6 @@
 #include "main.h"
 
-
-HuGUI::AutonSelector autonSelector;
 pros::Motor motor(1);
-
 
 void RedRings() {
 	motor.move(127);
@@ -69,16 +66,18 @@ void b4() {
  * to keep execution time for this mode under a few seconds.
  */
 void initialize() {
-	autonSelector.initialize_auton_selector();
-	autonSelector.add_auton(RedRings, "Red Rings", true);
-	autonSelector.add_auton(r1, "Red 1", true);
-	autonSelector.add_auton(r2, "Red 2", true);
-	autonSelector.add_auton(r3, "Red 3", true);
-	autonSelector.add_auton(r4, "Red 4", true);
-	autonSelector.add_auton(b1, "Blue 1", false);
-	autonSelector.add_auton(b2, "Blue 2", false);
-	autonSelector.add_auton(b3, "Blue 3", false);
-	autonSelector.add_auton(b4, "Blue 4", false);
+	GHUI::initialize_auton_selector({
+		GHUI::Auton(RedRings, "Red Rings", GHUI::AutonType::RED),
+		GHUI::Auton(r1, "Red 1", GHUI::AutonType::RED),
+		GHUI::Auton(r2, "Red 2", GHUI::AutonType::RED),
+		GHUI::Auton(r3, "Red 3", GHUI::AutonType::RED),
+		GHUI::Auton(r4, "Red 4", GHUI::AutonType::RED),
+		GHUI::Auton(b1, "Blue 1", GHUI::AutonType::BLUE),
+		GHUI::Auton(b2, "Blue 2", GHUI::AutonType::BLUE),
+		GHUI::Auton(b3, "Blue 3", GHUI::AutonType::BLUE),
+		GHUI::Auton(b4, "Blue 4", GHUI::AutonType::BLUE)
+	});
+	GHUI::console_print("Initialized", 0);
 }
 
 /**
@@ -111,7 +110,7 @@ void competition_initialize() {}
  * from where it left off.
  */
 void autonomous() {
-	autonSelector.run_selected_auton();
+	GHUI::run_selected_auton();
 }
 
 /**
