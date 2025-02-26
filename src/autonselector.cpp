@@ -1,7 +1,5 @@
 #include "autonselector.hpp"
 
-LV_IMG_DECLARE(jerry);
-
 namespace GHUI {
     lv_obj_t* posLabel;
     lv_obj_t* selectedAutonLabel;
@@ -20,6 +18,8 @@ namespace GHUI {
 
     lv_obj_t* bar;
 
+    std::vector<lv_obj_t*> consoleText(10);
+
     int selected_auton = 0;
     int numRed = 0;
     int numBlue = 0;
@@ -33,6 +33,7 @@ namespace GHUI {
 
     void initialize_auton_selector(std::vector<Auton> autons) {
         load_selected_auton();
+
         lv_style_init(&optionsButtonStyle);
         lv_style_set_bg_color(&optionsButtonStyle, lv_color_make(255, 255, 255));
         lv_style_set_text_color(&optionsButtonStyle, lv_color_make(0, 0, 0));
@@ -50,7 +51,6 @@ namespace GHUI {
         for(auto auton : autons) {
             add_auton(auton.auton, auton.auton_name, auton.alliance);
         }
-
         create_home_screen();
         lv_scr_load(homeScreen);
     }
@@ -113,14 +113,17 @@ namespace GHUI {
     }
 
     void console_print(std::string text, int line) { //Enter a line from 0 - 9
-        lv_obj_t* label = lv_label_create(console);
-        lv_label_set_text(label, text.c_str());
-        lv_obj_align(label, LV_ALIGN_TOP_LEFT, 0, 20 * line);
+        if (consoleText[line] != NULL) {
+            lv_obj_del(consoleText[line]);
+        }
+        consoleText[line] = lv_label_create(console);
+        lv_label_set_text(consoleText[line], text.c_str());
+        lv_obj_align(consoleText[line], LV_ALIGN_TOP_LEFT, 0, (20 * line) - 20);
     }
 
-    void update_pos(double x, double y, double theta) {
+    void update_pos(double x, double y, double theta, int precision) {
         std::stringstream ss;
-        ss << std::fixed << std::setprecision(3) << x << ", " << y << ", " << theta;
+        ss << std::fixed << std::setprecision(precision) << x << ", " << y << ", " << theta;
         std::string pos = ss.str();
         lv_label_set_text(posLabel, pos.c_str());
     }
@@ -135,6 +138,10 @@ namespace GHUI {
     void change_selected_auton(int index) {
         selected_auton = index;
 
+        if(!pros::usd::is_installed()) {
+            return;
+        }
+
         FILE* file = fopen("/usd/auton.txt", "w");
         if (file) {
             fputs(std::to_string(selected_auton).c_str(), file);
@@ -143,6 +150,9 @@ namespace GHUI {
     }
 
     void load_selected_auton() {
+        if(!pros::usd::is_installed()) {
+            return;
+        }
         FILE* file = fopen("/usd/auton.txt", "r");
         if (file) {
             char buffer[10];
@@ -166,14 +176,19 @@ namespace GHUI {
 
     void create_home_screen() {
         homeScreen = lv_obj_create(NULL);
-        
-        lv_obj_t* logo = lv_img_create(homeScreen);
-        lv_img_set_src(logo, &jerry);
+
+        lv_obj_t* logo = lv_obj_create(homeScreen);
         lv_obj_align(logo, LV_ALIGN_CENTER, 0, -20);
+        lv_obj_set_style_bg_color(logo, lv_color_make(0, 0, 0), 0);
+        lv_obj_set_size(logo, 470, 200);
+
+        if(pros::usd::is_installed()) {
+            static Gif gif("/usd/logo.gif", logo);
+        }
 
         bar = lv_obj_create(homeScreen);
         
-        lv_obj_set_size(bar, 480, 240 / 6);
+        lv_obj_set_size(bar, 480, 40);
         lv_obj_align(bar, LV_ALIGN_BOTTOM_MID, 0, 0);   
     
         startButton = create_button(bar, 0, 0, 70, 25, 1, "");
@@ -191,6 +206,8 @@ namespace GHUI {
         std::string auton_name = "Auton: " + auton_list[selected_auton].first.first;
         lv_label_set_text(selectedAutonLabel, auton_name.c_str());
         lv_obj_align(selectedAutonLabel, LV_ALIGN_LEFT_MID, 10, 0);
+        
+        lv_obj_set_scrollbar_mode(bar, LV_SCROLLBAR_MODE_OFF);
     }
 
     void create_tab_view() {
