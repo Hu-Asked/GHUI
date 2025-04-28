@@ -38,6 +38,9 @@ namespace GHUI {
     void load_selected_auton();
     void run_selected_auton();
 
+    void add_config_toggle(bool* toggleVarialbe, std::string name);
+    void add_config_slider(double* SliderVarialbe, std::string name, int min, int max, int step);
+
     void create_home_screen();
     void create_tab_view();
 

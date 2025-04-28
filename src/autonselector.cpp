@@ -30,6 +30,8 @@ namespace GHUI {
     static lv_style_t optionsButtonStyle;
     static lv_style_t redAutonButtonStyle;
     static lv_style_t blueAutonButtonStyle;
+    static lv_style_t toggleConfigButtonStyleTrue;
+    static lv_style_t toggleConfigButtonStyleFalse;
 
     void initialize_auton_selector(std::vector<Auton> autons) {
         load_selected_auton();
@@ -43,6 +45,12 @@ namespace GHUI {
         
         lv_style_init(&blueAutonButtonStyle);
         lv_style_set_bg_color(&blueAutonButtonStyle, lv_color_make(104, 175, 240));
+      
+        lv_style_init(&toggleConfigButtonStyleTrue);
+        lv_style_set_bg_color(&toggleConfigButtonStyleTrue, lv_color_make(0, 255, 0));
+
+        lv_style_init(&toggleConfigButtonStyleFalse);
+        lv_style_set_bg_color(&toggleConfigButtonStyleFalse, lv_color_make(255, 0, 0));
         
         create_tab_view();
 
@@ -132,7 +140,14 @@ namespace GHUI {
         lv_obj_t* btn = lv_event_get_target(e);
         change_selected_auton(auton_map[btn]);
         std::string display = auton_list[auton_map[btn]].first.first;
-        lv_label_set_text(selectedAutonLabel, ("Auton: " + display).c_str());
+        auto alliance = auton_list[auton_map[btn]].first.second;
+        std::string allianceString = (alliance == RED) ? " (R)" : " (B)";
+        if(alliance == RED) {
+            lv_obj_add_style(selectedAutonLabel, &redAutonButtonStyle, 0);
+        } else if(alliance == BLUE) {
+            lv_obj_add_style(selectedAutonLabel, &blueAutonButtonStyle, 0);
+        }
+        lv_label_set_text(selectedAutonLabel, ("Auton: " + display + allianceString).c_str());
     }
 
     void change_selected_auton(int index) {
@@ -174,6 +189,37 @@ namespace GHUI {
         auton_list[selected_auton].second();
     }
 
+    void toggle_config_event(lv_event_t* e) {
+        lv_obj_t* btn = lv_event_get_target(e);
+        bool* toggleVariable = (bool*)lv_event_get_user_data(e);
+        *toggleVariable = !(*toggleVariable);
+        lv_obj_remove_style(btn, (*toggleVariable ? &toggleConfigButtonStyleFalse : &toggleConfigButtonStyleTrue), 0);
+        lv_obj_add_style(btn, (*toggleVariable ? &toggleConfigButtonStyleTrue : &toggleConfigButtonStyleFalse), 0);
+    }
+
+    void add_config_toggle(bool* toggleVariable, std::string name) {
+        lv_obj_t* btn = create_button(config, 0, 0, 90, 50, 1, name.c_str());
+        lv_obj_add_event_cb(btn, toggle_config_event, LV_EVENT_CLICKED, NULL);
+        lv_obj_set_user_data(btn, &toggleVariable);
+        if (toggleVariable) {
+            lv_obj_add_style(btn, &toggleConfigButtonStyleTrue, 0);
+        } else {
+            lv_obj_add_style(btn, &toggleConfigButtonStyleFalse, 0);
+        }
+    }
+
+    void add_config_slider(double* sliderVariable, std::string name, int min, int max, int step) {
+        lv_obj_t* slider = lv_slider_create(config);
+        lv_obj_set_size(slider, 200, 20);
+        lv_obj_align(slider, LV_ALIGN_CENTER, 0, 0);
+        lv_slider_set_range(slider, min, max);
+        lv_slider_set_value(slider, *sliderVariable, LV_ANIM_OFF);
+        lv_obj_add_event_cb(slider, [](lv_event_t* e) {
+            double* sliderVariable = (double*)lv_event_get_user_data(e);
+            *sliderVariable = lv_slider_get_value(lv_event_get_target(e));
+        }, LV_EVENT_VALUE_CHANGED, sliderVariable);
+    }
+    
     void create_home_screen() {
         homeScreen = lv_obj_create(NULL);
 
@@ -183,7 +229,7 @@ namespace GHUI {
         lv_obj_set_size(logo, 470, 200);
 
         if(pros::usd::is_installed()) {
-            static Gif gif("/usd/logo.gif", logo);
+            // static Gif gif("/usd/logo.gif", logo);
         }
 
         bar = lv_obj_create(homeScreen);
