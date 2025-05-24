@@ -1,6 +1,6 @@
 #include "main.h"
 
-pros::Motor motor(1);
+pros::Motor motor(14);
 
 void RedRings() {
 	motor.move(127);
@@ -65,19 +65,21 @@ void b4() {
  * All other competition modes are blocked by initialize; it is recommended
  * to keep execution time for this mode under a few seconds.
  */
+double toggle = 0;
 void initialize() {
-	GHUI::initialize_auton_selector({
-		GHUI::Auton(RedRings, "Red Rings", GHUI::AutonType::RED),
-		GHUI::Auton(r1, "Red 1", GHUI::AutonType::RED),
-		GHUI::Auton(r2, "Red 2", GHUI::AutonType::RED),
-		GHUI::Auton(r3, "Red 3", GHUI::AutonType::RED),
-		GHUI::Auton(r4, "Red 4", GHUI::AutonType::RED),
-		GHUI::Auton(b1, "Blue 1", GHUI::AutonType::BLUE),
-		GHUI::Auton(b2, "Blue 2", GHUI::AutonType::BLUE),
-		GHUI::Auton(b3, "Blue 3", GHUI::AutonType::BLUE),
-		GHUI::Auton(b4, "Blue 4", GHUI::AutonType::BLUE)
+	hugui::initialize_auton_selector({
+		hugui::Auton(RedRings, "Red Rings", hugui::AutonType::RED),
+		hugui::Auton(r1, "Red 1", hugui::AutonType::RED),
+		hugui::Auton(r2, "Red 2", hugui::AutonType::RED),
+		hugui::Auton(r3, "Red 3", hugui::AutonType::RED),
+		hugui::Auton(r4, "Red 4", hugui::AutonType::RED),
+		hugui::Auton(b1, "Blue 1", hugui::AutonType::BLUE),
+		hugui::Auton(b2, "Blue 2", hugui::AutonType::BLUE),
+		hugui::Auton(b3, "Blue 3", hugui::AutonType::BLUE),
+		hugui::Auton(b4, "Blue 4", hugui::AutonType::BLUE)
 	});
-	GHUI::console_print("Initialized", 0);
+	hugui::console_print("Initialized", 0);
+	hugui::add_config_slider(&toggle, "Toggle", 0, -100, 100);
 }
 
 /**
@@ -110,7 +112,7 @@ void competition_initialize() {}
  * from where it left off.
  */
 void autonomous() {
-	GHUI::run_selected_auton();
+	hugui::run_selected_auton();
 }
 
 /**
@@ -132,11 +134,12 @@ void opcontrol() {
 	pros::Controller master(pros::E_CONTROLLER_MASTER);
 	while(true) {
 		lv_task_handler();
-		GHUI::update_pos(count, count, count);
+		hugui::update_pos(count, count, count);
 		pros::delay(50);
 		count+= 1;
 		if(master.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_A)) {
 			autonomous();
 		}
+		hugui::console_print(std::to_string(toggle), 1);
 	}
 }

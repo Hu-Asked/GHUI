@@ -37,7 +37,7 @@
 #include "api.h"
 #include "pros/apix.h"
 
-#include "autonselector.hpp"
+#include "hugui/autonselector.hpp"
 
 /**
  * You should add more #includes here

@@ -1,6 +1,6 @@
 #include "autonselector.hpp"
 
-namespace GHUI {
+namespace hugui {
     lv_obj_t* posLabel;
     lv_obj_t* selectedAutonLabel;
 
@@ -199,12 +199,11 @@ namespace GHUI {
 
     void add_config_toggle(bool* toggleVariable, std::string name) {
         lv_obj_t* btn = create_button(config, 0, 0, 90, 50, 1, name.c_str());
-        lv_obj_add_event_cb(btn, toggle_config_event, LV_EVENT_CLICKED, NULL);
-        lv_obj_set_user_data(btn, &toggleVariable);
-        if (toggleVariable) {
+        lv_obj_add_event_cb(btn, toggle_config_event, LV_EVENT_CLICKED, toggleVariable);
+        if (*toggleVariable) {
             lv_obj_add_style(btn, &toggleConfigButtonStyleTrue, 0);
         } else {
-            lv_obj_add_style(btn, &toggleConfigButtonStyleFalse, 0);
+            lv_obj_add_style(btn, &toggleConfigButtonStyleFalse, 1);
         }
     }
 
@@ -229,7 +228,7 @@ namespace GHUI {
         lv_obj_set_size(logo, 470, 200);
 
         if(pros::usd::is_installed()) {
-            // static Gif gif("/usd/logo.gif", logo);
+            static Gif gif("/usd/logo.gif", logo);
         }
 
         bar = lv_obj_create(homeScreen);
