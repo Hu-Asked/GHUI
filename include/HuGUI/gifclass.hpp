@@ -1,4 +1,5 @@
 #pragma once
+
 #include "main.h"
 #include "liblvgl/lvgl.h"
 #include "gifdec.h"

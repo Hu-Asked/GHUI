@@ -1,4 +1,4 @@
-#include "autonselector.hpp"
+#include "hugui.hpp"
 
 namespace hugui {
     lv_obj_t* posLabel;
@@ -33,7 +33,7 @@ namespace hugui {
     static lv_style_t toggleConfigButtonStyleTrue;
     static lv_style_t toggleConfigButtonStyleFalse;
 
-    void initialize_auton_selector(std::vector<Auton> autons) {
+    void initialize_auton_selector(std::vector<Auton> autons, bool addLogo) {
         load_selected_auton();
 
         lv_style_init(&optionsButtonStyle);
@@ -59,7 +59,7 @@ namespace hugui {
         for(auto auton : autons) {
             add_auton(auton.auton, auton.auton_name, auton.alliance);
         }
-        create_home_screen();
+        create_home_screen(addLogo);
         lv_scr_load(homeScreen);
     }
 
@@ -136,18 +136,31 @@ namespace hugui {
         lv_label_set_text(posLabel, pos.c_str());
     }
 
-    void change_auton_event(lv_event_t* e) {
-        lv_obj_t* btn = lv_event_get_target(e);
-        change_selected_auton(auton_map[btn]);
-        std::string display = auton_list[auton_map[btn]].first.first;
-        auto alliance = auton_list[auton_map[btn]].first.second;
-        std::string allianceString = (alliance == RED) ? " (R)" : " (B)";
+    void update_auton_string(int index) {
+        if(index >= auton_list.size() || index < 0) {
+            index = 0;
+            selected_auton = 0;
+        }
+        std::string display = auton_list[index].first.first;
+        auto alliance = auton_list[index].first.second;
+        std::string allianceString = "";
+        if(alliance == RED) {
+            allianceString = " (R)";
+        } else if(alliance == BLUE) {
+            allianceString = " (B)";
+        }
         if(alliance == RED) {
             lv_obj_add_style(selectedAutonLabel, &redAutonButtonStyle, 0);
         } else if(alliance == BLUE) {
             lv_obj_add_style(selectedAutonLabel, &blueAutonButtonStyle, 0);
         }
         lv_label_set_text(selectedAutonLabel, ("Auton: " + display + allianceString).c_str());
+
+    }
+    void change_auton_event(lv_event_t* e) {
+        lv_obj_t* btn = lv_event_get_target(e);
+        change_selected_auton(auton_map[btn]);
+        update_auton_string(auton_map[btn]);
     }
 
     void change_selected_auton(int index) {
@@ -174,16 +187,16 @@ namespace hugui {
             if (fgets(buffer, sizeof(buffer), file)) {
                 selected_auton = std::stoi(buffer);
             } else {
-                selected_auton = -1; // Default if reading fails
+                selected_auton = 0; // Default if reading fails
             }
             fclose(file);
         } else {
-            selected_auton = -1; // Default if file does not exist
+            selected_auton = 0; // Default if file does not exist
         }
     }
     
     void run_selected_auton() {
-        if(selected_auton == -1) {
+        if(selected_auton == 0) {
             return;
         }
         auton_list[selected_auton].second();
@@ -219,15 +232,15 @@ namespace hugui {
         }, LV_EVENT_VALUE_CHANGED, sliderVariable);
     }
     
-    void create_home_screen() {
+    void create_home_screen(bool addLogo) {
         homeScreen = lv_obj_create(NULL);
 
         lv_obj_t* logo = lv_obj_create(homeScreen);
-        lv_obj_align(logo, LV_ALIGN_CENTER, 0, -20);
-        lv_obj_set_style_bg_color(logo, lv_color_make(0, 0, 0), 0);
         lv_obj_set_size(logo, 470, 200);
+        lv_obj_set_style_bg_color(logo, lv_color_make(0, 0, 0), 0);
+        lv_obj_align(logo, LV_ALIGN_CENTER, 0, -20);
 
-        if(pros::usd::is_installed()) {
+        if(pros::usd::is_installed() && addLogo) {
             static Gif gif("/usd/logo.gif", logo);
         }
 
@@ -248,10 +261,10 @@ namespace hugui {
         lv_obj_align(posLabel, LV_ALIGN_RIGHT_MID, -10, 0);
 
         selectedAutonLabel = lv_label_create(bar);
-        std::string auton_name = "Auton: " + auton_list[selected_auton].first.first;
-        lv_label_set_text(selectedAutonLabel, auton_name.c_str());
-        lv_obj_align(selectedAutonLabel, LV_ALIGN_LEFT_MID, 10, 0);
         
+        update_auton_string(selected_auton);
+
+        lv_obj_align(selectedAutonLabel, LV_ALIGN_LEFT_MID, 10, 0);
         lv_obj_set_scrollbar_mode(bar, LV_SCROLLBAR_MODE_OFF);
     }
 
